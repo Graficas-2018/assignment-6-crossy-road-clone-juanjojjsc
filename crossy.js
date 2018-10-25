@@ -62,7 +62,7 @@ function loadGround(type,path,z)
 
   // Put in a ground plane to show off the lighting
   // geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
-  geometry = new THREE.PlaneGeometry(100, 30, 50, 50);
+  geometry = new THREE.PlaneGeometry(100, 30, 5, 5);
   var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
 
   mesh.position.set(0, y, z);
@@ -75,7 +75,7 @@ function loadGround(type,path,z)
 
   if (type == "Rock")
   {
-    var rock_geom = new THREE.BoxGeometry( 2, 2, 2, 50, 50, 50 );
+    var rock_geom = new THREE.BoxGeometry( 2, 2, 2, 5, 5, 5 );
     var material_t = new THREE.MeshBasicMaterial( {color: 0x683000} );
     var rock = new THREE.Mesh( rock_geom, material_t );
 
