@@ -72,6 +72,32 @@ function loadGround(type,path,z)
   scene.add( mesh );
   mesh.castShadow = false;
   mesh.receiveShadow = true;
+
+  if (type == "Rock")
+  {
+    var rock_geom = new THREE.BoxGeometry( 2, 2, 2, 50, 50, 50 );
+    var material_t = new THREE.MeshBasicMaterial( {color: 0x683000} );
+    var rock = new THREE.Mesh( rock_geom, material_t );
+
+    var clone_rock;
+
+    for (let i = 0; i < 17; i++)
+    {
+        clone_rock = rock.clone();
+
+        posx = Math.floor(Math.random() * 12) + 1;
+        posx *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
+        posy = Math.floor(Math.random() * 4) + 1;
+        posy *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
+
+        clone_rock.position.set(posx, posy, -z);
+
+
+        scene.add( clone_rock );
+
+    }
+  }
+
 }
 
 function loadGroundALL()
