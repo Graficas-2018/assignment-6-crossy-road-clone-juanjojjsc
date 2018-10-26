@@ -18,6 +18,8 @@ var bgUrl = "./images/mwh.jpg";
 var robot_mixer = {};
 var deadAnimator;
 var morphs = [];
+var boxes = [];
+var robotBox = null;
 
 
 
@@ -61,7 +63,7 @@ function loadGround(type,path,z)
   map.repeat.set(8, 8);
 
   // Put in a ground plane to show off the lighting
-  // geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
+  //geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
   geometry = new THREE.PlaneGeometry(100, 30, 5, 5);
   var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
 
@@ -81,7 +83,7 @@ function loadGround(type,path,z)
 
     var clone_rock;
 
-    for (let i = 0; i < 17; i++)
+    for (var i = 0; i < 17; i++)
     {
         clone_rock = rock.clone();
 
@@ -92,8 +94,12 @@ function loadGround(type,path,z)
 
         clone_rock.position.set(posx, posy, -z);
 
+        var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
+        rockBox.update();
+        rockBox.visible = false;
+        boxes.push(rockBox);
 
-        scene.add( clone_rock );
+        scene.add(clone_rock);
 
     }
   }
@@ -144,6 +150,11 @@ function loadFBX()
         console.log("x: ",robot_idle.position.x);
         console.log("y: ",robot_idle.position.y);
         console.log("z: ",robot_idle.position.z);
+        //Collider
+        var robotBBox = new THREE.BoxHelper(robot_idle, 0x00ff00);
+        robotBBox.update();
+        robotBBox.visible = false;
+        robotBox = robotBBox;
         scene.add( robot_idle );
 
         //createDeadAnimation();
@@ -185,6 +196,30 @@ function animate() {
     {
         KF.update();
     }
+
+    checkCollisions();
+
+
+    //var robBox = new THREE.Box3().setFromObject(this.sphereBBox);
+    //var cubeBox = new THREE.Box3().setFromObject(this.cubeBBox);
+
+    //if (robBox.intersectsBox(cubeBox))
+
+
+}
+
+function checkCollisions(){
+  //robotBox.update();
+  var robotBBox = new THREE.Box3().setFromObject(robotBox);
+  for(let box of boxes){
+    //box.update();
+    if(robotBox.intersectsBox(new THREE.Box3().setFromObject(box)))
+    collision();
+  }
+}
+
+function collision() {
+    console.log("Collision");
 }
 
 function run() {
