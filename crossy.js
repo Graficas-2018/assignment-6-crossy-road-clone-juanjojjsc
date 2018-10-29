@@ -8,6 +8,7 @@ flamingo = null,
 stork = null,
 group = null,
 stepCount = 1;
+var robotBBox = null;
 
 
 var rockPath = "images/rock.png";
@@ -92,7 +93,7 @@ function loadGround(type,path,z)
         posy = Math.floor(Math.random() * 4) + 1;
         posy *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
 
-        clone_rock.position.set(posx, posy, -z);
+        clone_rock.position.set(posx, posy, z);
 
         var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
         rockBox.update();
@@ -151,10 +152,11 @@ function loadFBX()
         console.log("y: ",robot_idle.position.y);
         console.log("z: ",robot_idle.position.z);
         //Collider
-        var robotBBox = new THREE.BoxHelper(robot_idle, 0x00ff00);
+        robotBBox = new THREE.BoxHelper(robot_idle, 0x00ff00);
         robotBBox.update();
-        robotBBox.visible = false;
+        robotBBox.visible = true;
         robotBox = robotBBox;
+        scene.add(robotBBox);
         scene.add( robot_idle );
 
         //createDeadAnimation();
@@ -187,6 +189,11 @@ function animate() {
     var deltat = now - currentTime;
     currentTime = now;
 
+
+    if (robotBBox != null)
+      robotBBox.update();
+
+
     if(robot_idle && robot_mixer[animation])
     {
         robot_mixer[animation].update(deltat * 0.001);
@@ -197,7 +204,8 @@ function animate() {
         KF.update();
     }
 
-    checkCollisions();
+    if (robotBox != null)
+      checkCollisions();
 
 
     //var robBox = new THREE.Box3().setFromObject(this.sphereBBox);
@@ -213,7 +221,7 @@ function checkCollisions(){
   var robotBBox = new THREE.Box3().setFromObject(robotBox);
   for(let box of boxes){
     //box.update();
-    if(robotBox.intersectsBox(new THREE.Box3().setFromObject(box)))
+    if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(box)))
     collision();
   }
 }
