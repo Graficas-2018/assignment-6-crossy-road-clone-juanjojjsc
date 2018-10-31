@@ -9,6 +9,8 @@ stork = null,
 group = null,
 stepCount = 1;
 var robotBBox = null;
+var morphs = [];
+var missile = null;
 
 
 var rockPath = "images/rock.png";
@@ -21,6 +23,7 @@ var robot_mixer = {};
 var deadAnimator;
 var morphs = [];
 var boxes = [];
+var tankBoxes = [];
 var robotBox = null;
 var tiles = [];
 var scoreCount = 0;
@@ -59,6 +62,55 @@ function cloneMesh(mesh,z)
   scene.add(clone_mesh);
 
 }
+
+function createMovingObstacle(z)
+{
+      // var loader = new THREE.GLTFLoader();
+      // loader.load( "./models/Horse.glb", function( gltf ) {
+      //     missile = gltf.scene.children[ 0 ];
+      //     missile.scale.set( 0.1, 0.1, 0.1 );
+      //     missile.position.y -= 10;
+      //     missile.position.z = z;
+      //     missile.castShadow = true;
+      //     missile. receiveShadow = true;
+      //     scene.add( missile );
+      //     morphs.push(missile);
+      //     //mixer.clipAction( gltf.animations[ 0 ], horse).setDuration( 0.5 ).play();
+      //     //console.log(gltf.animations);
+      // } );
+
+      var loader = new THREE.FBXLoader();
+      loader.load( './models/rover/rover.fbx', function ( object )
+      {
+          //robot_mixer["idle"] = new THREE.AnimationMixer( scene );
+          object.scale.set(0.2, 0.2, 0.2);
+          object.position.y -= 4.2;
+          object.position.x -= 12;
+          object.position.z = z;
+          object.rotation.y += Math.PI;
+          object.rotation.x += Math.PI/2;
+          object.traverse( function ( child ) {
+              if ( child.isMesh ) {
+                  child.castShadow = true;
+                  child.receiveShadow = true;
+              }
+          } );
+          tank = object;
+          console.log("TANK CREATED");
+
+          //Collider
+          tankBBox = new THREE.BoxHelper(tank, 0x00ff00);
+          tankBBox.update();
+          tankBBox.visible = true;
+          boxes.push(tankBBox);
+          tankBoxes.push(tankBBox);
+          scene.add(tankBBox);
+          scene.add( tank );
+          morphs.push(tank);
+
+      } );
+}
+
 
 function createObstacles(z)
 {
@@ -217,7 +269,11 @@ function loadGroundALL()
             //console.log(tiles[i]);
             //loadGround("Rock",rockPath,-count);
         if (tiles[i]==1)
+        {
+            createMovingObstacle(-count);
             cloneMesh(metalMesh,-count);
+        }
+
         if (tiles[i]==2)
             cloneMesh(waterMesh,-count);
 
@@ -253,6 +309,7 @@ function loadFBX()
         robotBox = robotBBox;
         scene.add(robotBBox);
         scene.add( robot_idle );
+        //morphs.push(robot_idle);
 
         //createDeadAnimation();
 
@@ -288,6 +345,13 @@ function animate() {
     if (robotBBox != null)
       robotBBox.update();
 
+    for (let tBox of tankBoxes)
+    {
+      if (tBox != null)
+        tBox.update();
+    }
+
+
 
     if(robot_idle && robot_mixer[animation])
     {
@@ -303,10 +367,20 @@ function animate() {
       checkCollisions();
 
 
+
+
+
+
     //var robBox = new THREE.Box3().setFromObject(this.sphereBBox);
     //var cubeBox = new THREE.Box3().setFromObject(this.cubeBBox);
 
     //if (robBox.intersectsBox(cubeBox))
+    for(var morph of morphs)
+    {
+        morph.position.x += 0.04 * deltat;
+        if(morph.position.x > 30)
+            morph.position.x = -30 - Math.random() * 50;
+    }
 
 
 }
@@ -323,8 +397,8 @@ function checkCollisions(){
 
 function collision() {
     console.log("Collision");
-    alert("GAME OVER. Score: " + scoreCount);
-    location.reload();
+    //alert("GAME OVER. Score: " + scoreCount);
+    //location.reload();
 }
 
 function run() {
