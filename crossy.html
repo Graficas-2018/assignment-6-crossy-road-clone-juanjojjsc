@@ -2,7 +2,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Crossy Road by JJ Santos</title>
-
+<style>
+#score {
+	position:absolute;
+	right:20px;
+	top:20px;
+}</style>
 <link rel="stylesheet" href="./libs/jquery-ui/jquery-ui.css" />
 <link rel="stylesheet" href="./libs/colorpicker/css/colorpicker.css" />
 <link rel="stylesheet" href="./css/main.css" />
@@ -25,6 +30,8 @@
 <script src="crossy.js"></script>
 
 <script type="text/javascript">
+
+
 
 
 function initControls()
@@ -67,12 +74,15 @@ function initControls()
 <div id="container">
     <canvas id="webglcanvas" width=1000 height=600></canvas>
 	<div id="title">Crossy Road by JJ Santos</div>
+  <div id="score">Score: 0</div>
 </div>
 
 
 
 
 </body>
+
+
 
 
 </html>

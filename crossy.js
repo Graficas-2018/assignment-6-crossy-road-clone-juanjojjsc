@@ -15,12 +15,15 @@ var rockPath = "images/rock.png";
 var metalPath = "images/metal.png";
 var waterPath = "images/slime.png";
 var bgUrl = "./images/mwh.jpg";
+var dangerUrl = "./images/danger.png";
 
 var robot_mixer = {};
 var deadAnimator;
 var morphs = [];
 var boxes = [];
 var robotBox = null;
+var tiles = [];
+var scoreCount = 0;
 
 
 
@@ -35,7 +38,7 @@ function changeAnimation(animation_text)
 
     if(animation =="dead")
     {
-        createDeadAnimation();
+        //createDeadAnimation();
     }
     else
     {
@@ -44,18 +47,62 @@ function changeAnimation(animation_text)
     }
 }
 
+
+function cloneMesh(mesh,z)
+{
+  var clone_mesh;
+
+  clone_mesh = mesh.clone();
+  clone_mesh.position.set(0, -4, z);
+  clone_mesh.rotation.x += Math.PI/2;
+
+  scene.add(clone_mesh);
+
+}
+
+function createObstacles(z)
+{
+  var rock_geom = new THREE.BoxGeometry( 4, 4, 4, 5, 5, 5 );
+  var map = new THREE.TextureLoader().load(dangerUrl);
+  var material_t = new THREE.MeshPhongMaterial({color:0xffffff,
+      map:map,
+      transparent:true});
+  var rock = new THREE.Mesh( rock_geom, material_t );
+
+  var clone_rock;
+
+  for (var i = 0; i < 2; i++)
+  {
+      clone_rock = rock.clone();
+
+      var posx = Math.floor(Math.random() * 30) + 1;
+      posx *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
+      var posy = Math.floor(Math.random() * 12) + 4;
+
+      clone_rock.position.set(posx, posy, z);
+
+      var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
+      rockBox.update();
+      rockBox.visible = false;
+      boxes.push(rockBox);
+
+      scene.add(clone_rock);
+
+  }
+}
+
 function loadGround(type,path,z)
 {
   console.log("Loading Ground Type: ",type);
 
   var y = -4;
 
-  if (type == "Rock")
-      y = -2;
-  if (type == "Metal")
-      y = -0;
-  if (type == "Water")
-      y = -3;
+  // if (type == "Rock")
+  //     y = -2;
+  // if (type == "Metal")
+  //     y = -0;
+  // if (type == "Water")
+  //     y = -3;
 
 
   // Create a texture map
@@ -76,41 +123,66 @@ function loadGround(type,path,z)
   mesh.castShadow = false;
   mesh.receiveShadow = true;
 
-  if (type == "Rock")
-  {
-    var rock_geom = new THREE.BoxGeometry( 2, 2, 2, 5, 5, 5 );
-    var material_t = new THREE.MeshBasicMaterial( {color: 0x683000} );
-    var rock = new THREE.Mesh( rock_geom, material_t );
-
-    var clone_rock;
-
-    for (var i = 0; i < 17; i++)
-    {
-        clone_rock = rock.clone();
-
-        posx = Math.floor(Math.random() * 12) + 1;
-        posx *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
-        posy = Math.floor(Math.random() * 4) + 1;
-        posy *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
-
-        clone_rock.position.set(posx, posy, z);
-
-        var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
-        rockBox.update();
-        rockBox.visible = false;
-        boxes.push(rockBox);
-
-        scene.add(clone_rock);
-
-    }
-  }
+  // if (type == "Rock")
+  // {
+  //   var rock_geom = new THREE.BoxGeometry( 4, 4, 4, 5, 5, 5 );
+  //   var material_t = new THREE.MeshBasicMaterial( {color: 0x683000} );
+  //   var rock = new THREE.Mesh( rock_geom, material_t );
+  //
+  //   var clone_rock;
+  //
+  //   for (var i = 0; i < 2; i++)
+  //   {
+  //       clone_rock = rock.clone();
+  //
+  //       posx = Math.floor(Math.random() * 30) + 1;
+  //       posx *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
+  //       posy = Math.floor(Math.random() * 12) + 4;
+  //
+  //       clone_rock.position.set(posx, posy, z);
+  //
+  //       var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
+  //       rockBox.update();
+  //       rockBox.visible = false;
+  //       boxes.push(rockBox);
+  //
+  //       scene.add(clone_rock);
+  //
+  //   }
+  // }
 
 }
 
 function loadGroundALL()
 {
 
-  loadGround("Rock",rockPath,30);
+
+  //Create the 3 meshes
+  //METAL MESH
+  //var y = -4;
+  // Create a texture map
+  var map = new THREE.TextureLoader().load(metalPath);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(8, 8);
+  // Put in a ground plane to show off the lighting
+  //geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
+  geometry = new THREE.PlaneGeometry(100, 30, 5, 5);
+  var metalMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+
+  //ROCK MESH
+  map = new THREE.TextureLoader().load(rockPath);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(8, 8);
+  var rockMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+
+  //WATER MESH
+  map = new THREE.TextureLoader().load(waterPath);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(8, 8);
+  var waterMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+
+  loadGround("Metal",metalPath,60);
+  loadGround("Metal",metalPath,30);
   var count = 0;
   while (count < 999)
   {
@@ -118,22 +190,45 @@ function loadGroundALL()
 
       if (prob > 0 && prob < 60)
       {
-          loadGround("Rock",rockPath,-count);
+          tiles.push(0);
+          //loadGround("Rock",rockPath,-count);
       } else if (prob > 60 && prob < 85)
       {
-          loadGround("Metal",metalPath,-count);
+          tiles.push(1);
+          //loadGround("Metal",metalPath,-count);
       } else {
-          loadGround("Water",waterPath,-count);
+          tiles.push(2);
+          //loadGround("Water",waterPath,-count);
       }
       count += 30;
 
+    }
+    var i = 0;
+    count = 0;
+
+    for (var i=0; i<tiles.length; i++)
+    {
+
+        if (tiles[i]==0)
+        {
+            cloneMesh(rockMesh,-count);
+            createObstacles(-count);
+        }
+            //console.log(tiles[i]);
+            //loadGround("Rock",rockPath,-count);
+        if (tiles[i]==1)
+            cloneMesh(metalMesh,-count);
+        if (tiles[i]==2)
+            cloneMesh(waterMesh,-count);
+
+        count += 30;
     }
 }
 
 function loadFBX()
 {
     var loader = new THREE.FBXLoader();
-    loader.load( './models/Robot/robot_idle.fbx', function ( object )
+    loader.load( './models/Robot/robot_walk.fbx', function ( object )
     {
         robot_mixer["idle"] = new THREE.AnimationMixer( scene );
         object.scale.set(0.02, 0.02, 0.02);
@@ -228,6 +323,8 @@ function checkCollisions(){
 
 function collision() {
     console.log("Collision");
+    alert("GAME OVER. Score: " + scoreCount);
+    location.reload();
 }
 
 function run() {
@@ -256,7 +353,7 @@ function setLightColor(light, r, g, b)
 var directionalLight = null;
 var spotLight = null;
 var ambientLight = null;
-var mapUrl = "./images/checker_large.gif";
+//var mapUrl = "./images/checker_large.gif";
 
 var SHADOW_MAP_WIDTH = 2048, SHADOW_MAP_HEIGHT = 2048;
 
@@ -294,7 +391,7 @@ function createScene(canvas) {
     spotLight = new THREE.SpotLight (0xffffff);
     spotLight.position.set(-30, 100, -10);
     spotLight.target.position.set(-2, 0, -2);
-    root.add(spotLight);
+
 
     spotLight.castShadow = true;
 
@@ -306,7 +403,8 @@ function createScene(canvas) {
     spotLight.shadow.mapSize.height = SHADOW_MAP_HEIGHT;
 
     ambientLight = new THREE.AmbientLight ( 0xffffff );
-    root.add(ambientLight);
+    camera.add(ambientLight);
+    camera.add(spotLight);
 
     // Create the objects
     loadFBX();
@@ -319,27 +417,27 @@ function createScene(canvas) {
     loadGroundALL();
 
     // Create a group to hold the objects
-    group = new THREE.Object3D;
-    root.add(group);
+    //group = new THREE.Object3D;
+    //root.add(group);
 
     // Create a texture map
-    var map = new THREE.TextureLoader().load(mapUrl);
-    map.wrapS = map.wrapT = THREE.RepeatWrapping;
-    map.repeat.set(8, 8);
-
-    var color = 0xffffff;
-
-    // Put in a ground plane to show off the lighting
-    geometry = new THREE.PlaneGeometry(200, 200, 50, 50);
-    var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
-
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.y = -4.02;
+    // var map = new THREE.TextureLoader().load(mapUrl);
+    // map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    // map.repeat.set(8, 8);
+    //
+    // var color = 0xffffff;
+    //
+    // // Put in a ground plane to show off the lighting
+    // geometry = new THREE.PlaneGeometry(200, 200, 50, 50);
+    // var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map, side:THREE.DoubleSide}));
+    //
+    // mesh.rotation.x = -Math.PI / 2;
+    // mesh.position.y = -4.02;
 
     // Add the mesh to our group
-    group.add( mesh );
-    mesh.castShadow = false;
-    mesh.receiveShadow = true;
+    //group.add( mesh );
+    //mesh.castShadow = false;
+    //mesh.receiveShadow = true;
 
     // Now add the group to our scene
     scene.add( root );
@@ -349,7 +447,11 @@ function createScene(canvas) {
 
 function onDocumentKeyDown(event)
 {
-    var keyCode = event.which;
+    var keyCode = null;
+
+    var score = $("#score");
+    if (robot_idle)
+         keyCode = event.which;
 
     if (keyCode == 38)
     {
@@ -357,6 +459,10 @@ function onDocumentKeyDown(event)
         console.log("x: ",robot_idle.position.x);
         console.log("y: ",robot_idle.position.y);
         console.log("z: ",robot_idle.position.z);
+
+
+        scoreCount += 10;
+        score.text("Score: " + scoreCount);
 
         robot_idle.position.z -= 10;
         // console.log(robot_idle.rotation.y);
@@ -368,6 +474,7 @@ function onDocumentKeyDown(event)
         if (stepCount == 3)
         {
             camera.position.z -= 30;
+            spotLight.position.z -= 30;
             stepCount = 0;
         }
         stepCount += 1;

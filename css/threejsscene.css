@@ -12,6 +12,7 @@
 	color:#e28383;
 }
 
+
 #prompt {
 	position:absolute;
 	bottom:20px;
@@ -57,5 +58,3 @@
 #webglcanvas {
 	background: #ffffff;
 }
-
-
