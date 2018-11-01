@@ -12,6 +12,8 @@ var robotBBox = null;
 var morphs = [];
 var missile = null;
 var orbitControls = null;
+var onWater = false;
+var onPlatform = false;
 
 
 var rockPath = "images/rock.png";
@@ -445,30 +447,61 @@ function checkCollisions(){
     collision();
   }
   for(let wc of waterColliders){
-    if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)))
-    {
-        waterDamage();
 
-    }
+      if (robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)))
+      {
+          console.log("WATER");
+          onPlatform = false;
+          onWater = true;
 
-    // for(let plat of platColliders){
-    //   if(!robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
-    //   {
-    //       //waterDamage();
-    //       console.log("NO PLATFORM");
-    //   }
-    // }
-
+      }
+      // for(let plat of platColliders){
+      //     // if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)) && !robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)) )
+      //     // {
+      //     //     waterDamage();
+      //     // }
+      //     if (robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)))
+      //     {
+      //         console.log("WATER");
+      //     }
+      //
+      //     if (!robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
+      //     {
+      //         console.log("PLATFORM");
+      //     }
+      // }
   }
+
+
+  //   if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)))
+  //   {
+  //       waterDamage();
+  //
+  //   }
+  //
+  //   for(let plat of platColliders){
+  //     if(!robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
+  //     {
+  //         //waterDamage();
+  //         console.log("NO PLATFORM");
+  //     }
+  //   }
+  //
+  // }
   for(let plat of platColliders){
     if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
     {
         //waterDamage();
         console.log("PLATFORM");
-        robotPlayer.position.z -= 30;
-        camera.position.z -= 30;
+        onWater = false;
+        onPlatform = true;
+        // robotPlayer.position.z -= 30;
+        // camera.position.z -= 30;
     }
   }
+
+  if (onWater == true && onPlatform == false)
+        waterDamage();
 
 
 
