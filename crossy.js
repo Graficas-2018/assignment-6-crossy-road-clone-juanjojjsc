@@ -11,6 +11,7 @@ stepCount = 1;
 var robotBBox = null;
 var morphs = [];
 var missile = null;
+var orbitControls = null;
 
 
 var rockPath = "images/rock.png";
@@ -89,6 +90,7 @@ function createMovingObstacle(z)
           object.position.z = z;
           object.rotation.y += Math.PI;
           object.rotation.x += Math.PI/2;
+          object.rotation.z += Math.PI;
           object.traverse( function ( child ) {
               if ( child.isMesh ) {
                   child.castShadow = true;
@@ -101,6 +103,8 @@ function createMovingObstacle(z)
           //Collider
           tankBBox = new THREE.BoxHelper(tank, 0x00ff00);
           tankBBox.update();
+          //tankBBox.position.x = 100;
+          //tankBBox.setFromCenterAndSize(tank,(20,20,20));
           tankBBox.visible = true;
           boxes.push(tankBBox);
           tankBoxes.push(tankBBox);
@@ -215,28 +219,28 @@ function loadGroundALL()
   // Create a texture map
   var map = new THREE.TextureLoader().load(metalPath);
   map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(8, 8);
+  map.repeat.set(1, 1);
   // Put in a ground plane to show off the lighting
   //geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
-  geometry = new THREE.PlaneGeometry(100, 30, 5, 5);
-  var metalMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+  geometry = new THREE.PlaneGeometry(250, 30, 5, 5);
+  var metalMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.BackSide}));
 
   //ROCK MESH
   map = new THREE.TextureLoader().load(rockPath);
-  map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(8, 8);
-  var rockMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+  //map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  //map.repeat.set(1, 1);
+  var rockMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.BackSide}));
 
   //WATER MESH
   map = new THREE.TextureLoader().load(waterPath);
-  map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(8, 8);
-  var waterMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
+  //map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  //map.repeat.set(1, 1);
+  var waterMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.BackSide}));
 
   loadGround("Metal",metalPath,60);
   loadGround("Metal",metalPath,30);
   var count = 0;
-  while (count < 999)
+  while (count < 1998)
   {
       var prob = Math.floor(Math.random() * 100) + 1;
 
@@ -288,9 +292,9 @@ function loadFBX()
     {
         robot_mixer["idle"] = new THREE.AnimationMixer( scene );
         object.scale.set(0.02, 0.02, 0.02);
-        object.position.y += 0.1;
+        object.position.y -= 4.2;
         object.position.x -= 12;
-        object.rotation.y += Math.PI ;
+        object.rotation.y += Math.PI;
         object.traverse( function ( child ) {
             if ( child.isMesh ) {
                 child.castShadow = true;
@@ -368,18 +372,12 @@ function animate() {
 
 
 
-
-
-
-    //var robBox = new THREE.Box3().setFromObject(this.sphereBBox);
-    //var cubeBox = new THREE.Box3().setFromObject(this.cubeBBox);
-
-    //if (robBox.intersectsBox(cubeBox))
+    //Tank Movement and parallax
     for(var morph of morphs)
     {
-        morph.position.x += 0.04 * deltat;
-        if(morph.position.x > 30)
-            morph.position.x = -30 - Math.random() * 50;
+        morph.position.x += 0.045 * deltat;
+        if(morph.position.x > 100)
+            morph.position.x = -100 - Math.random() * 50;
     }
 
 
