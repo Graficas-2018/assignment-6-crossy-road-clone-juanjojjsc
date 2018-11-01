@@ -19,15 +19,23 @@ var metalPath = "images/metal.png";
 var waterPath = "images/slime.png";
 var bgUrl = "./images/mwh.jpg";
 var dangerUrl = "./images/danger.png";
+var platformUrl = "./images/platform.png";
+
+var scoreL = null;
+var healthL = null;
 
 var robot_mixer = {};
 var deadAnimator;
 var morphs = [];
 var boxes = [];
 var tankBoxes = [];
+var platColliders = [];
+var waterColliders = [];
 var robotBox = null;
 var tiles = [];
 var scoreCount = 0;
+var health = 1000;
+var damage = 1;
 
 
 
@@ -52,16 +60,40 @@ function changeAnimation(animation_text)
 }
 
 
-function cloneMesh(mesh,z)
+function cloneMesh(mesh,z,collider)
 {
   var clone_mesh;
 
   clone_mesh = mesh.clone();
   clone_mesh.position.set(0, -4, z);
   clone_mesh.rotation.x += Math.PI/2;
+  if (collider)
+  {
+    var cloneBBox = new THREE.BoxHelper(clone_mesh, 0x00ff00);
+    cloneBBox.update();
+    cloneBBox.visible = false;
+    waterColliders.push(cloneBBox);
+    scene.add(cloneBBox);
+  }
 
   scene.add(clone_mesh);
 
+}
+
+function cloneMeshWithCollider(mesh,z)
+{
+  var clone_mesh;
+
+  clone_mesh = mesh.clone();
+  clone_mesh.position.set(0, -4, z);
+  clone_mesh.rotation.x += Math.PI/2;
+  //Collider
+  var cloneBBox = new THREE.BoxHelper(clone_mesh, 0x00ff00);
+  cloneBBox.update();
+  cloneBBox.visible = false;
+  boxes.push(cloneBBox);
+  scene.add(cloneBBox);
+  scene.add(clone_mesh);
 }
 
 function createMovingObstacle(z)
@@ -147,28 +179,49 @@ function createObstacles(z)
   }
 }
 
+function createPlatform(z)
+{
+    // Create a texture map
+    var map = new THREE.TextureLoader().load(platformUrl);
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set(3, 3);
+
+    // Put in a ground plane to show off the lighting
+    //geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
+    geometry = new THREE.PlaneGeometry(120, 30, 5, 5);
+    var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.BackSide}));
+
+    mesh.position.set(0, -4, z);
+    mesh.rotation.x += Math.PI/2;
+
+    //Collider
+    var platBBox = new THREE.BoxHelper(mesh, 0x00ff00);
+    platBBox.update();
+    platBBox.visible = false;
+    platColliders.push(platBBox);
+    scene.add(platBBox);
+
+    // Add the mesh to our group
+    scene.add( mesh );
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    morphs.push(mesh);
+}
+
 function loadGround(type,path,z)
 {
   console.log("Loading Ground Type: ",type);
 
   var y = -4;
 
-  // if (type == "Rock")
-  //     y = -2;
-  // if (type == "Metal")
-  //     y = -0;
-  // if (type == "Water")
-  //     y = -3;
-
-
   // Create a texture map
   var map = new THREE.TextureLoader().load(path);
   map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(8, 8);
+  map.repeat.set(1, 1);
 
   // Put in a ground plane to show off the lighting
   //geometry = new THREE.BoxGeometry(100, 30, 5, 50, 50, 50);
-  geometry = new THREE.PlaneGeometry(100, 30, 5, 5);
+  geometry = new THREE.PlaneGeometry(250, 30, 5, 5);
   var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.DoubleSide}));
 
   mesh.position.set(0, y, z);
@@ -178,34 +231,6 @@ function loadGround(type,path,z)
   scene.add( mesh );
   mesh.castShadow = false;
   mesh.receiveShadow = true;
-
-  // if (type == "Rock")
-  // {
-  //   var rock_geom = new THREE.BoxGeometry( 4, 4, 4, 5, 5, 5 );
-  //   var material_t = new THREE.MeshBasicMaterial( {color: 0x683000} );
-  //   var rock = new THREE.Mesh( rock_geom, material_t );
-  //
-  //   var clone_rock;
-  //
-  //   for (var i = 0; i < 2; i++)
-  //   {
-  //       clone_rock = rock.clone();
-  //
-  //       posx = Math.floor(Math.random() * 30) + 1;
-  //       posx *= Math.floor(Math.random()*2) == 1 ? 1 : -1;
-  //       posy = Math.floor(Math.random() * 12) + 4;
-  //
-  //       clone_rock.position.set(posx, posy, z);
-  //
-  //       var rockBox = new THREE.BoxHelper(clone_rock, 0x00ff00);
-  //       rockBox.update();
-  //       rockBox.visible = false;
-  //       boxes.push(rockBox);
-  //
-  //       scene.add(clone_rock);
-  //
-  //   }
-  // }
 
 }
 
@@ -237,10 +262,11 @@ function loadGroundALL()
   //map.repeat.set(1, 1);
   var waterMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:0xffffff, map:map, side:THREE.BackSide}));
 
+  loadGround("Metal",metalPath,90);
   loadGround("Metal",metalPath,60);
   loadGround("Metal",metalPath,30);
   var count = 0;
-  while (count < 1998)
+  while (count < 999)
   {
       var prob = Math.floor(Math.random() * 100) + 1;
 
@@ -270,16 +296,18 @@ function loadGroundALL()
             cloneMesh(rockMesh,-count);
             createObstacles(-count);
         }
-            //console.log(tiles[i]);
-            //loadGround("Rock",rockPath,-count);
+
         if (tiles[i]==1)
         {
-            createMovingObstacle(-count);
             cloneMesh(metalMesh,-count);
+            createMovingObstacle(-count);
         }
 
         if (tiles[i]==2)
-            cloneMesh(waterMesh,-count);
+        {
+            cloneMesh(waterMesh,-count,true);
+            createPlatform(-count);
+        }
 
         count += 30;
     }
@@ -288,12 +316,13 @@ function loadGroundALL()
 function loadFBX()
 {
     var loader = new THREE.FBXLoader();
-    loader.load( './models/Robot/robot_walk.fbx', function ( object )
+    loader.load( './models/Robot/robot_run.fbx', function ( object )
     {
         robot_mixer["idle"] = new THREE.AnimationMixer( scene );
         object.scale.set(0.02, 0.02, 0.02);
         object.position.y -= 4.2;
         object.position.x -= 12;
+        object.position.z += 30;
         object.rotation.y += Math.PI;
         object.traverse( function ( child ) {
             if ( child.isMesh ) {
@@ -346,6 +375,24 @@ function animate() {
     currentTime = now;
 
 
+    if (health < 1)
+    {
+      //alert("GAME OVER. Score: " + scoreCount);
+      // var to_remove = [];
+      //
+      // scene.traverse ( function( child ) {
+      //     if ( child instanceof THREE.Mesh === true ) {
+      //         to_remove.push( child );
+      //       }
+      //   } );
+      //
+      //   for ( var i = 0; i < to_remove.length; i++ ) {
+      //     scene.remove( to_remove[i] );
+      //   }
+      location.reload();
+    }
+
+
     if (robotBBox != null)
       robotBBox.update();
 
@@ -353,6 +400,12 @@ function animate() {
     {
       if (tBox != null)
         tBox.update();
+    }
+
+    for (let platB of platColliders)
+    {
+      if (platB != null)
+        platB.update();
     }
 
 
@@ -384,19 +437,58 @@ function animate() {
 }
 
 function checkCollisions(){
-  //robotBox.update();
   var robotBBox = new THREE.Box3().setFromObject(robotBox);
   for(let box of boxes){
-    //box.update();
     if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(box)))
     collision();
   }
+  for(let wc of waterColliders){
+    if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(wc)))
+    {
+        waterDamage();
+
+    }
+
+    // for(let plat of platColliders){
+    //   if(!robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
+    //   {
+    //       //waterDamage();
+    //       console.log("NO PLATFORM");
+    //   }
+    // }
+
+  }
+  for(let plat of platColliders){
+    if(robotBBox.intersectsBox(new THREE.Box3().setFromObject(plat)))
+    {
+        //waterDamage();
+        console.log("PLATFORM");
+        robot_idle.position.z -= 30;
+        camera.position.z -= 30;
+    }
+  }
+
+
+
+}
+
+function waterDamage()
+{
+    console.log("Water Damage");
+    damage += 1e-10;
+    //damage *= 0.5;
+    health -= damage;
+    healthL = $("#health");
+    healthL.text("Health: " + Math.round(health));
 }
 
 function collision() {
     console.log("Collision");
-    //alert("GAME OVER. Score: " + scoreCount);
-    //location.reload();
+    robot_idle.position.z += 30;
+    camera.position.z += 30;
+    health -= 50;
+    healthL = $("#health");
+    healthL.text("Health: " + health);
 }
 
 function run() {
@@ -452,7 +544,7 @@ function createScene(canvas) {
 
     // Add  a camera so we can view the scene
     camera = new THREE.PerspectiveCamera( 45, canvas.width / canvas.height, 1, 4000 );
-    camera.position.set(-15, 16, 60);
+    camera.position.set(-15, 16, 90);
     scene.add(camera);
 
     //orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -521,11 +613,11 @@ function onDocumentKeyDown(event)
 {
     var keyCode = null;
 
-    var score = $("#score");
+
     if (robot_idle)
          keyCode = event.which;
 
-    if (keyCode == 38)
+    if (keyCode == 38 || keyCode == 87)
     {
         // Forward
         console.log("x: ",robot_idle.position.x);
@@ -534,7 +626,8 @@ function onDocumentKeyDown(event)
 
 
         scoreCount += 10;
-        score.text("Score: " + scoreCount);
+        scoreL = $("#score");
+        scoreL.text("Score: " + scoreCount);
 
         robot_idle.position.z -= 10;
         // console.log(robot_idle.rotation.y);
@@ -552,13 +645,13 @@ function onDocumentKeyDown(event)
         stepCount += 1;
 
     }
-    else if (keyCode == 37)
+    else if (keyCode == 37 || keyCode == 65)
     {
         // Left
         robot_idle.position.x -= 10;
         robot_idle.rotation.y = -Math.PI / 2;
     }
-    else if (keyCode == 39)
+    else if (keyCode == 39 || keyCode == 68)
     {
         // Right
         robot_idle.position.x += 10;
