@@ -2,7 +2,7 @@ var renderer = null,
 scene = null,
 camera = null,
 root = null,
-robot_idle = null,
+robotPlayer = null,
 robot_attack = null,
 flamingo = null,
 stork = null,
@@ -36,6 +36,8 @@ var tiles = [];
 var scoreCount = 0;
 var health = 1000;
 var damage = 1;
+var facingLeft = false;
+var facingRight = false;
 
 
 
@@ -54,8 +56,8 @@ function changeAnimation(animation_text)
     }
     else
     {
-        robot_idle.rotation.x = 0;
-        robot_idle.position.y = -4;
+        robotPlayer.rotation.x = 0;
+        robotPlayer.position.y = -4;
     }
 }
 
@@ -115,7 +117,7 @@ function createMovingObstacle(z)
       var loader = new THREE.FBXLoader();
       loader.load( './models/rover/rover.fbx', function ( object )
       {
-          //robot_mixer["idle"] = new THREE.AnimationMixer( scene );
+          robot_mixer["idle"] = new THREE.AnimationMixer( scene );
           object.scale.set(0.2, 0.2, 0.2);
           object.position.y -= 4.2;
           object.position.x -= 12;
@@ -137,7 +139,7 @@ function createMovingObstacle(z)
           tankBBox.update();
           //tankBBox.position.x = 100;
           //tankBBox.setFromCenterAndSize(tank,(20,20,20));
-          tankBBox.visible = true;
+          tankBBox.visible = false;
           boxes.push(tankBBox);
           tankBoxes.push(tankBBox);
           scene.add(tankBBox);
@@ -316,7 +318,7 @@ function loadGroundALL()
 function loadFBX()
 {
     var loader = new THREE.FBXLoader();
-    loader.load( './models/Robot/robot_run.fbx', function ( object )
+    loader.load( './models/Robot/robot_idle.fbx', function ( object )
     {
         robot_mixer["idle"] = new THREE.AnimationMixer( scene );
         object.scale.set(0.02, 0.02, 0.02);
@@ -330,40 +332,40 @@ function loadFBX()
                 child.receiveShadow = true;
             }
         } );
-        robot_idle = object;
+        robotPlayer = object;
         console.log("ROBOT CREATED");
-        console.log("x: ",robot_idle.position.x);
-        console.log("y: ",robot_idle.position.y);
-        console.log("z: ",robot_idle.position.z);
+        console.log("x: ",robotPlayer.position.x);
+        console.log("y: ",robotPlayer.position.y);
+        console.log("z: ",robotPlayer.position.z);
         //Collider
-        robotBBox = new THREE.BoxHelper(robot_idle, 0x00ff00);
+        robotBBox = new THREE.BoxHelper(robotPlayer, 0x00ff00);
         robotBBox.update();
-        robotBBox.visible = true;
+        robotBBox.visible = false;
         robotBox = robotBBox;
         scene.add(robotBBox);
-        scene.add( robot_idle );
-        //morphs.push(robot_idle);
+        scene.add( robotPlayer );
+        //morphs.push(robotPlayer);
 
         //createDeadAnimation();
 
-        robot_mixer["idle"].clipAction( object.animations[ 0 ], robot_idle ).play();
+        robot_mixer["idle"].clipAction( object.animations[ 0 ], robotPlayer ).play();
 
         loader.load( './models/Robot/robot_atk.fbx', function ( object )
         {
             robot_mixer["attack"] = new THREE.AnimationMixer( scene );
-            robot_mixer["attack"].clipAction( object.animations[ 0 ], robot_idle ).play();
+            robot_mixer["attack"].clipAction( object.animations[ 0 ], robotPlayer ).play();
         } );
 
         loader.load( './models/Robot/robot_run.fbx', function ( object )
         {
             robot_mixer["run"] = new THREE.AnimationMixer( scene );
-            robot_mixer["run"].clipAction( object.animations[ 0 ], robot_idle ).play();
+            robot_mixer["run"].clipAction( object.animations[ 0 ], robotPlayer ).play();
         } );
 
         loader.load( './models/Robot/robot_walk.fbx', function ( object )
         {
             robot_mixer["walk"] = new THREE.AnimationMixer( scene );
-            robot_mixer["walk"].clipAction( object.animations[ 0 ], robot_idle ).play();
+            robot_mixer["walk"].clipAction( object.animations[ 0 ], robotPlayer ).play();
         } );
     } );
 }
@@ -410,7 +412,7 @@ function animate() {
 
 
 
-    if(robot_idle && robot_mixer[animation])
+    if(robotPlayer && robot_mixer[animation])
     {
         robot_mixer[animation].update(deltat * 0.001);
     }
@@ -463,7 +465,7 @@ function checkCollisions(){
     {
         //waterDamage();
         console.log("PLATFORM");
-        robot_idle.position.z -= 30;
+        robotPlayer.position.z -= 30;
         camera.position.z -= 30;
     }
   }
@@ -475,6 +477,7 @@ function checkCollisions(){
 function waterDamage()
 {
     console.log("Water Damage");
+    changeAnimation("attack");
     damage += 1e-10;
     //damage *= 0.5;
     health -= damage;
@@ -484,7 +487,8 @@ function waterDamage()
 
 function collision() {
     console.log("Collision");
-    robot_idle.position.z += 30;
+    changeAnimation("attack");
+    robotPlayer.position.z += 30;
     camera.position.z += 30;
     health -= 50;
     healthL = $("#health");
@@ -613,28 +617,41 @@ function onDocumentKeyDown(event)
 {
     var keyCode = null;
 
-
-    if (robot_idle)
+    if (robotPlayer)
          keyCode = event.which;
 
     if (keyCode == 38 || keyCode == 87)
     {
         // Forward
-        console.log("x: ",robot_idle.position.x);
-        console.log("y: ",robot_idle.position.y);
-        console.log("z: ",robot_idle.position.z);
+        changeAnimation("run");
+        console.log("x: ",robotPlayer.position.x);
+        console.log("y: ",robotPlayer.position.y);
+        console.log("z: ",robotPlayer.position.z);
 
 
         scoreCount += 10;
         scoreL = $("#score");
         scoreL.text("Score: " + scoreCount);
 
-        robot_idle.position.z -= 10;
-        // console.log(robot_idle.rotation.y);
-        if (robot_idle.rotation.y > 0 && robot_idle.rotation.y < 3)
-            robot_idle.rotation.y += Math.PI / 2;
-        else if(robot_idle.rotation.y < 0)
-            robot_idle.rotation.y -= Math.PI / 2;
+        robotPlayer.position.z -= 10;
+        // console.log(robotPlayer.rotation.y);
+        // if (robotPlayer.rotation.y > 0 && robotPlayer.rotation.y < 3)
+        //     robotPlayer.rotation.y += Math.PI / 2;
+        // else if(robotPlayer.rotation.y < 0)
+        //     robotPlayer.rotation.y -= Math.PI / 2;
+
+        if (facingLeft)
+        {
+            robotPlayer.rotation.y -= Math.PI / 2;
+            facingLeft = false;
+            facingRight = false;
+        }
+        if (facingRight)
+        {
+            robotPlayer.rotation.y += Math.PI / 2;
+            facingLeft = false;
+            facingRight = false;
+        }
 
         if (stepCount == 3)
         {
@@ -648,13 +665,34 @@ function onDocumentKeyDown(event)
     else if (keyCode == 37 || keyCode == 65)
     {
         // Left
-        robot_idle.position.x -= 10;
-        robot_idle.rotation.y = -Math.PI / 2;
+        changeAnimation("walk");
+        robotPlayer.position.x -= 10;
+        robotPlayer.rotation.y = -Math.PI / 2;
+        facingLeft = true;
+        facingRight = false;
     }
     else if (keyCode == 39 || keyCode == 68)
     {
         // Right
-        robot_idle.position.x += 10;
-        robot_idle.rotation.y = Math.PI / 2;
+        changeAnimation("walk");
+        robotPlayer.position.x += 10;
+        robotPlayer.rotation.y = Math.PI / 2;
+        facingLeft = false;
+        facingRight = true;
+    }
+    else if (keyCode == 83 || keyCode == 40)
+    {
+        // Down
+        changeAnimation("idle");
+        if (facingLeft)
+        {
+            robotPlayer.rotation.y -= Math.PI / 2;
+        }
+        if (facingRight)
+        {
+            robotPlayer.rotation.y += Math.PI / 2;
+        }
+        facingLeft = false;
+        facingRight = false;
     }
 }
